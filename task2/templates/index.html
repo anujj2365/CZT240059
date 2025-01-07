@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TASKINATOR</title>
+    <style>
+        /* Global Styles */
+        body {
+            font-family: Arial, sans-serif;
+            background: url('among.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Container Styles */
+        .container {
+            background: linear-gradient(135deg, rgba(155, 77, 202, 0.9), rgba(92, 30, 143, 0.9));
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+            width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: white;
+            margin-bottom: 20px;
+            font-size: 35px;
+        }
+
+        input[type="text"] {
+            width: 90%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            background-color: #333;
+            color: white;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #b450f7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #9e40db;
+        }
+
+        #tasks {
+            margin-top: 20px;
+        }
+
+        .task {
+            margin: 15px 0;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            text-align: left;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .task button {
+            background-color: #ff4d4d;
+            margin-right: 10px;
+            padding: 8px 15px;
+            border-radius: 8px;
+        }
+
+        .task button:hover {
+            background-color: #ff1a1a;
+        }
+
+        .completed {
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .task-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>TASKINATOR</h1>
+        <form id="task-form">
+            <input type="text" id="title" placeholder="Task Title" required>
+            <input type="text" id="description" placeholder="Task Description" required>
+            <button type="submit">Add Task</button>
+        </form>
+        <div id="tasks"></div>
+    </div>
+
+    <script>
+        const apiUrl = "http://127.0.0.1:5000/tasks";
+
+        // Fetch and display tasks
+        const fetchTasks = async () => {
+            const response = await fetch(apiUrl);
+            const tasks = await response.json();
+            const tasksContainer = document.getElementById("tasks");
+            tasksContainer.innerHTML = "";
+            tasks.forEach(task => {
+                const taskDiv = document.createElement("div");
+                taskDiv.classList.add("task");
+                taskDiv.innerHTML = `
+                    <div>
+                        <strong>${task.title}</strong> - ${task.description}
+                        ${task.completed ? "<span class='completed'>(Completed)</span>" : ""}
+                    </div>
+                    <div class="task-buttons">
+                        <button onclick="deleteTask(${task.id})">Delete</button>
+                        <button onclick="markCompleted(${task.id})">Mark as Completed</button>
+                    </div>
+                `;
+                tasksContainer.appendChild(taskDiv);
+            });
+        };
+
+        // Add a new task
+        document.getElementById("task-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const title = document.getElementById("title").value;
+            const description = document.getElementById("description").value;
+
+            await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title, description, completed: false }),
+            });
+
+            fetchTasks();
+        });
+
+        // Delete a task
+        const deleteTask = async (id) => {
+            await fetch(`${apiUrl}/${id}`, { method: "DELETE" });
+            fetchTasks();
+        };
+
+        // Mark task as completed
+        const markCompleted = async (id) => {
+            await fetch(`${apiUrl}/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ completed: true }),
+            });
+            fetchTasks();
+        };
+
+        fetchTasks();
+    </script>
+</body>
+</html>
+
